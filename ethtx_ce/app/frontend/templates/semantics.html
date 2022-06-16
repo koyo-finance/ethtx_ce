@@ -185,9 +185,7 @@
                    value="{{ address }}">
             <label for="network">Network</label>
             <select name="network" id="network">
-                <option {% if metadata.chain == 'mainnet' %} selected {% endif %} value="mainnet">ETH mainnet</option>
-                <option {% if metadata.chain == 'goerli' %} selected {% endif %} value="goerli">Goerli testnet</option>
-                <option {% if metadata.chain == 'rinkeby' %} selected {% endif %} value="rinkeby">Rinkeby testnet
+                <option {% if metadata.chain == 'boba' %} selected {% endif %} value="mainnet">Boba mainnet</option>
                 </option>
             </select>
             <label for="name">Contract name</label>

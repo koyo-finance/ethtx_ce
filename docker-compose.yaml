@@ -7,6 +7,8 @@ services:
       - .env
     depends_on:
       - mongo
+    ports:
+      - "127.0.0.1:5055:5000"
     build:
       context: .
       dockerfile: Dockerfile

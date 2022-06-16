@@ -13,151 +13,150 @@
   -->
 
 {% macro address_link(address, label, badge="") %}
-    {%- if address and address != '0x0000000000000000000000000000000000000000' -%}
-        <a href="https://{%- if transaction.chain_id != 'mainnet' -%}{{ transaction.chain_id }}.{% endif %}etherscan.io/address/{{ address }}" target="_blank">
-           {%- if badge -%}
-              <span class="badge badge-info">[{{ badge }}] </span>
-           {%- endif -%}
-              {{- label -}}
-        </a>
-    {%- else -%}
-        {{- label -}}
+{%- if address and address != '0x0000000000000000000000000000000000000000' -%}
+<a href="https://blockexplorer.boba.network/address/{{ address }}" target="_blank">
+    {%- if badge -%}
+    <span class="badge badge-info">[{{ badge }}] </span>
     {%- endif -%}
+    {{- label -}}
+</a>
+{%- else -%}
+{{- label -}}
+{%- endif -%}
 {% endmacro %}
 
 {% macro nft_link(address, label) %}
-    {%- if address and address != '0x0000000000000000000000000000000000000000' -%}
-        <a href="https://{%- if transaction.chain_id != 'mainnet' -%}{{ transaction.chain_id }}.{% endif %}etherscan.io/token/{{ address }}" target="_blank">
-            {{- label -}}
-        </a>
-    {%- else -%}
-        {{- label -}}
-    {%- endif -%}
+{%- if address and address != '0x0000000000000000000000000000000000000000' -%}
+<a href="https://blockexplorer.boba.network/token/{{ address }}" target="_blank">
+    {{- label -}}
+</a>
+{%- else -%}
+{{- label -}}
+{%- endif -%}
 {% endmacro %}
 
 {% macro print_event_arguments(arguments) %}
-    {% for argument in arguments %}
-        {% if argument.type != "ignore" %}
-            {% if loop.index > 1 %}, {% endif %}
-            {%- if argument.name == "[no ABI]" -%}
-                <span class="badge badge-danger">no_ABI</span>
-            {%- else -%}
-                {%- if argument.name -%}
-                    <span style='color: darkred'>{{ argument.name }}=</span>
-                {%- endif -%}
-                {%- if argument.type == "tuple" -%}
-                    ({{- print_event_arguments(argument.value) -}})
-                {%- elif argument.type == "tuple[]" -%}
-                    [
-                    {%- for sub_arg in argument.value -%}
-                        {{- print_event_arguments(sub_arg) -}}
-                    {%- endfor -%}
-                    ]
-                {%- elif argument.type == "address" -%}
-                    {{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}
-                {%- elif argument.type == "nft" -%}
-                    {{- nft_link(argument.value.address, argument.value.name) -}}
-                {%- elif argument.type == "call" -%}
-                    {{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}.
-                    {{- argument.value.function_name -}}({{ print_event_arguments(argument.value.arguments) }})
-                {%- else -%}
-                    {{- argument.value -}}
-                {%- endif -%}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
+{% for argument in arguments %}
+{% if argument.type != "ignore" %}
+{% if loop.index > 1 %}, {% endif %}
+{%- if argument.name == "[no ABI]" -%}
+<span class="badge badge-danger">no_ABI</span>
+{%- else -%}
+{%- if argument.name -%}
+<span style='color: darkred'>{{ argument.name }}=</span>
+{%- endif -%}
+{%- if argument.type == "tuple" -%}
+({{- print_event_arguments(argument.value) -}})
+{%- elif argument.type == "tuple[]" -%}
+[
+{%- for sub_arg in argument.value -%}
+{{- print_event_arguments(sub_arg) -}}
+{%- endfor -%}
+]
+{%- elif argument.type == "address" -%}
+{{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}
+{%- elif argument.type == "nft" -%}
+{{- nft_link(argument.value.address, argument.value.name) -}}
+{%- elif argument.type == "call" -%}
+{{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}.
+{{- argument.value.function_name -}}({{ print_event_arguments(argument.value.arguments) }})
+{%- else -%}
+{{- argument.value -}}
+{%- endif -%}
+{% endif %}
+{% endif %}
+{% endfor %}
 {% endmacro %}
 
 {% macro print_call_arguments(arguments) %}
-    {% if arguments is not none %}
-        {%- for argument in arguments -%}
-            {% if argument.type != "ignore" %}
-                {%- if loop.index > 1 -%}, {% endif %}
-                {%- if argument.name == "[no ABI]" -%}
-                    <span class="badge badge-danger">no_ABI</span>
-                {%- else -%}
-                    {%- if argument.name %}<span style='color: darkred'>{{- argument.name -}}=</span>{%- endif -%}
-                    {%- if argument.type == "tuple" -%}
-                        ({{- print_call_arguments(argument.value) -}})
-                    {%- elif argument.type == "tuple[]" -%}
-                        [
-                        {%- for sub_arg in argument.value -%}
-                            {%- if loop.index > 1 -%}, {% endif %}
-                            ({{- print_call_arguments(sub_arg) -}})
-                        {%- endfor -%}
-                        ]
-                    {%- elif argument.type == "address" -%}
-                        {{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}
-                    {%- elif argument.type == "nft" -%}
-                        {{- nft_link(argument.value.address, argument.value.name) -}}
-                    {% elif argument.type == "call" %}
-                        {{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}.
-                        <span style="color: darkgreen">{{- argument.value.function_name -}}</span>(
-                        {{- print_event_arguments(argument.value.arguments) -}})
-                    {%- else -%}
-                        {{- argument.value -}}
-                    {%- endif -%}
-                {%- endif -%}
-            {%- endif -%}
-        {%- endfor -%}
-    {% endif %}
+{% if arguments is not none %}
+{%- for argument in arguments -%}
+{% if argument.type != "ignore" %}
+{%- if loop.index > 1 -%}, {% endif %}
+{%- if argument.name == "[no ABI]" -%}
+<span class="badge badge-danger">no_ABI</span>
+{%- else -%}
+{%- if argument.name %}<span style='color: darkred'>{{- argument.name -}}=</span>{%- endif -%}
+{%- if argument.type == "tuple" -%}
+({{- print_call_arguments(argument.value) -}})
+{%- elif argument.type == "tuple[]" -%}
+[
+{%- for sub_arg in argument.value -%}
+{%- if loop.index > 1 -%}, {% endif %}
+({{- print_call_arguments(sub_arg) -}})
+{%- endfor -%}
+]
+{%- elif argument.type == "address" -%}
+{{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}
+{%- elif argument.type == "nft" -%}
+{{- nft_link(argument.value.address, argument.value.name) -}}
+{% elif argument.type == "call" %}
+{{- address_link(argument.value.address, argument.value.name, argument.value.badge) -}}.
+<span style="color: darkgreen">{{- argument.value.function_name -}}</span>(
+{{- print_event_arguments(argument.value.arguments) -}})
+{%- else -%}
+{{- argument.value -}}
+{%- endif -%}
+{%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{% endif %}
 {% endmacro %}
 
 {%- macro print_call_line(call) -%}
-    <li id="{{ call.id }}"
-        class="indent-{{ call.indent }} {% if call.indent < 6 %}expanded{% endif %}">
-        <p>
-            <span style="color: slategray">[{{- call.gas_used if call.gas_used != None else "N/A" -}}]: </span>
-            {% if call.error %}
-                <span style='color: red'>({{ call.error }})</span>
-            {% endif %}
-            {% if call.call_type == "delegatecall" %}
-                <span style='color: darkorange'>(delegate)</span>
-            {% endif %}
-            {% if call.value and call.call_type != "selfdestruct" %}
-                <span style='color: blue'>ETH {{ call.value -}}</span>
-            {% endif %}
-            {%- if call.call_type == "selfdestruct" -%}
-                {{- address_link(call.from_address.address, call.from_address.name, call.from_address.badge) -}}
-                <span style='color: darkgreen'>.{{ call.call_type }}({% if call.value > 0 %}
-                    <span style='color: blue'>ETH {{ call.value }}</span> =>
-                    {{ address_link(call.to_address.address, call.to_address.name, call.to_address.badge) -}}{% endif %}
-                    )</span>
-            {%- elif call.call_type == "create" -%}
-                {{- address_link(call.to_address.address, call.to_address.name, call.to_address.badge) -}}.<span
-                    style='color: darkgreen'>New()</span>
-            {%- else -%}
+<li id="{{ call.id }}" class="indent-{{ call.indent }} {% if call.indent < 6 %}expanded{% endif %}">
+    <p>
+        <span style="color: slategray">[{{- call.gas_used if call.gas_used != None else "N/A" -}}]: </span>
+        {% if call.error %}
+        <span style='color: red'>({{ call.error }})</span>
+        {% endif %}
+        {% if call.call_type == "delegatecall" %}
+        <span style='color: darkorange'>(delegate)</span>
+        {% endif %}
+        {% if call.value and call.call_type != "selfdestruct" %}
+        <span style='color: blue'>ETH {{ call.value -}}</span>
+        {% endif %}
+        {%- if call.call_type == "selfdestruct" -%}
+        {{- address_link(call.from_address.address, call.from_address.name, call.from_address.badge) -}}
+        <span style='color: darkgreen'>.{{ call.call_type }}({% if call.value > 0 %}
+            <span style='color: blue'>ETH {{ call.value }}</span> =>
+            {{ address_link(call.to_address.address, call.to_address.name, call.to_address.badge) -}}{% endif %}
+            )</span>
+        {%- elif call.call_type == "create" -%}
+        {{- address_link(call.to_address.address, call.to_address.name, call.to_address.badge) -}}.<span
+            style='color: darkgreen'>New()</span>
+        {%- else -%}
 
-                {%- if call.call_type == "delegatecall" -%}
-                    {{- address_link(call.from_address.address, call.from_address.name, call.from_address.badge) -}}
-                {%- else -%}
-                    {{- address_link(call.to_address.address, call.to_address.name, call.to_address.badge) -}}
-                {%- endif -%}
+        {%- if call.call_type == "delegatecall" -%}
+        {{- address_link(call.from_address.address, call.from_address.name, call.from_address.badge) -}}
+        {%- else -%}
+        {{- address_link(call.to_address.address, call.to_address.name, call.to_address.badge) -}}
+        {%- endif -%}
 
-                {%- if call.call_type == "delegatecall" -%}
-                    [<span
-                        class='delegate'>{{- address_link(call.to_address.address, call.to_address.name, call.to_address.badge) -}}</span>
-                {%- endif -%}
-                {%- if call.function_guessed -%}
-                    <span style='color: dodgerblue'>.{{- call.function_name -}}</span>
-                {%- elif call.function_name != "0x" -%}
-                    <span style='color: darkgreen'>.{{- call.function_name -}}</span>
-                {%- else -%}
-                    <span style='color: darkgreen'>.fallback</span>
-                {%- endif -%}
-                {%- if call.call_type == "delegatecall" -%}
-                    ]
-                {%- endif -%}
+        {%- if call.call_type == "delegatecall" -%}
+        [<span class='delegate'>{{- address_link(call.to_address.address, call.to_address.name, call.to_address.badge)
+            -}}</span>
+        {%- endif -%}
+        {%- if call.function_guessed -%}
+        <span style='color: dodgerblue'>.{{- call.function_name -}}</span>
+        {%- elif call.function_name != "0x" -%}
+        <span style='color: darkgreen'>.{{- call.function_name -}}</span>
+        {%- else -%}
+        <span style='color: darkgreen'>.fallback</span>
+        {%- endif -%}
+        {%- if call.call_type == "delegatecall" -%}
+        ]
+        {%- endif -%}
 
-                <span>({{- print_call_arguments(call.arguments) -}}) => ({{- print_call_arguments(call.outputs) -}})</span>
-            {%- endif -%}
-        </p>
-        <ul>
-            {% for sub_call in call.subcalls %}
-                {{- print_call_line(sub_call) -}}
-            {% endfor %}
-        </ul>
-    </li>
+        <span>({{- print_call_arguments(call.arguments) -}}) => ({{- print_call_arguments(call.outputs) -}})</span>
+        {%- endif -%}
+    </p>
+    <ul>
+        {% for sub_call in call.subcalls %}
+        {{- print_call_line(sub_call) -}}
+        {% endfor %}
+    </ul>
+</li>
 {%- endmacro -%}
 
 <!doctype html>
@@ -165,7 +164,7 @@
 
 <head>
     {% include './partials/headtags.html' %}
-    <title>Ethtx.info Analysis {{ transaction.tx_hash }}</title>
+    <title>Ethtx Analysis {{ transaction.tx_hash }}</title>
 
     <link href="//cdn.jsdelivr.net/npm/jquery.fancytree@2.27/dist/skin-win8/ui.fancytree.min.css" rel="stylesheet">
     <script src="/static/jquery.min.js"></script>
@@ -176,173 +175,217 @@
 
 <body>
 
-<div>
-    <div class="container-top">
-        <h3>
-            <a title="Home" href="/">
-                <i class="fas fa-home "></i>
-            </a> Analysis for: <span class="transaction-hash">
-            {{ transaction.tx_hash }} / {{ transaction.chain_id }}</span>
-        </h3>
-        <div class="container-info-logo">
-            <div class="transaction-info">
-                <div>
-                    Block number: <span style='color: darkred'>{{ transaction.block_number }}</span>
-                    {% if transaction.timestamp %}
+    <div>
+        <div class="container-top">
+            <h3>
+                <a title="Home" href="/">
+                    <i class="fas fa-home "></i>
+                </a> Analysis for: <span class="transaction-hash">
+                    {{ transaction.tx_hash }} / {{ transaction.chain_id }}</span>
+            </h3>
+            <div class="container-info-logo">
+                <div class="transaction-info">
+                    <div>
+                        Block number: <span style='color: darkred'>{{ transaction.block_number }}</span>
+                        {% if transaction.timestamp %}
                         at <span style='color: darkred'>{{ transaction.timestamp }}</span> UTC
-                    {% endif %}
-                </div>
-                <div>
-                    Tx cost: <span
-                        style='color: darkred'>{{ (transaction.gas_used * transaction.gas_price / 10 ** 9) }}</span>
-                    ETH
-                    {% if transaction.chain_id == 'mainnet' and eth_price %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        Tx cost: <span style='color: darkred'>{{ (transaction.gas_used * transaction.gas_price / 10 **
+                            9) }}</span>
+                        ETH
+                        {% if transaction.chain_id == 'mainnet' and eth_price %}
                         /
-                        <span style='color: darkred'>{{ "{:,.2f}".format(transaction.gas_used * transaction.gas_price * eth_price / 10 ** 9) }}</span>
+                        <span style='color: darkred'>{{ "{:,.2f}".format(transaction.gas_used * transaction.gas_price *
+                            eth_price / 10 ** 9) }}</span>
                         USD
-                    {% endif %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        Gas used: <span style='color: darkred'>{{ "{:,}".format(transaction.gas_used) }}</span> / <span
+                            style='color: darkred'>{{ "{:,.2f}".format(transaction.gas_price ) }}</span> Gwei
+                    </div>
                 </div>
-                <div>
-                    Gas used: <span style='color: darkred'>{{ "{:,}".format(transaction.gas_used) }}</span> / <span
-                        style='color: darkred'>{{ "{:,.2f}".format(transaction.gas_price ) }}</span> Gwei
-                </div>
+                <a class="hosted-by" href="https://koyo.finance/" target="_blank" rel="noopener noreferrer">
+                    <svg width="258" height="86" viewBox="0 0 258 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_520_17)">
+                            <path
+                                d="M104.991 71.1082H94.9932V16.682H104.991V51.0029L119.789 32.2427H131.205L118.298 48.4579L131.205 71.1082H119.789L111.899 56.9654L104.991 66.1274V71.1082Z"
+                                fill="black" />
+                            <path
+                                d="M172.761 51.2938C172.761 54.2023 172.239 56.9169 171.197 59.4377C170.155 61.9342 168.737 64.1035 166.943 65.9456C165.15 67.7634 163.041 69.2056 160.617 70.272C158.218 71.3143 155.636 71.8354 152.873 71.8354C150.134 71.8354 147.553 71.3143 145.129 70.272C142.73 69.2056 140.621 67.7634 138.803 65.9456C137.01 64.1035 135.592 61.9342 134.549 59.4377C133.507 56.9169 132.986 54.2023 132.986 51.2938C132.986 48.3367 133.507 45.5978 134.549 43.0771C135.592 40.5564 137.01 38.3871 138.803 36.5692C140.621 34.7271 142.73 33.285 145.129 32.2427C147.553 31.2005 150.134 30.6794 152.873 30.6794C155.636 30.6794 158.218 31.1763 160.617 32.17C163.041 33.1396 165.15 34.5332 166.943 36.3511C168.737 38.1447 170.155 40.314 171.197 42.859C172.239 45.3797 172.761 48.1913 172.761 51.2938ZM162.762 51.2938C162.762 49.694 162.496 48.2519 161.963 46.9673C161.454 45.6584 160.751 44.5435 159.854 43.6225C158.957 42.6772 157.903 41.9622 156.691 41.4774C155.503 40.9684 154.231 40.7139 152.873 40.7139C151.516 40.7139 150.231 40.9684 149.019 41.4774C147.832 41.9622 146.79 42.6772 145.893 43.6225C145.02 44.5435 144.329 45.6584 143.82 46.9673C143.311 48.2519 143.057 49.694 143.057 51.2938C143.057 52.7965 143.311 54.1902 143.82 55.4748C144.329 56.7594 145.02 57.8743 145.893 58.8196C146.79 59.7649 147.832 60.5163 149.019 61.0738C150.231 61.607 151.516 61.8736 152.873 61.8736C154.231 61.8736 155.503 61.6191 156.691 61.1101C157.903 60.6011 158.957 59.8861 159.854 58.9651C160.751 58.044 161.454 56.9291 161.963 55.6202C162.496 54.3114 162.762 52.8692 162.762 51.2938ZM143.711 27.5527V19.8814H162.108V27.5527H143.711Z"
+                                fill="black" />
+                            <path
+                                d="M187.63 85.9419V75.9437L193.157 76.0164C194.126 76.0164 195.059 75.8589 195.956 75.5438C196.853 75.2287 197.677 74.7924 198.428 74.2349C199.204 73.6775 199.883 73.0109 200.464 72.2353C201.046 71.4839 201.519 70.6598 201.882 69.763C200.792 70.2236 199.677 70.6841 198.538 71.1446C197.423 71.6051 196.296 71.8354 195.156 71.8354C192.757 71.8354 190.503 71.4112 188.394 70.5629C186.285 69.7146 184.431 68.5148 182.831 66.9636C181.256 65.3881 180.008 63.4854 179.087 61.2555C178.19 59.0014 177.741 56.4807 177.741 53.6933V32.17H187.63V53.6933C187.63 55.0749 187.824 56.2868 188.212 57.329C188.624 58.347 189.17 59.2074 189.848 59.9103C190.527 60.589 191.315 61.098 192.211 61.4373C193.132 61.7767 194.114 61.9463 195.156 61.9463C196.174 61.9463 197.132 61.7161 198.029 61.2555C198.95 60.7708 199.749 60.1406 200.428 59.365C201.107 58.5894 201.64 57.7168 202.028 56.7473C202.416 55.7535 202.61 54.7355 202.61 53.6933V32.17H212.608V66.2001C212.583 68.939 212.05 71.5082 211.008 73.9077C209.966 76.3073 208.536 78.4039 206.718 80.1975C204.924 81.9911 202.828 83.409 200.428 84.4512C198.029 85.4935 195.459 86.0146 192.72 86.0146L187.63 85.9419Z"
+                                fill="black" />
+                            <path
+                                d="M257.836 51.2938C257.836 54.2023 257.314 56.9169 256.272 59.4377C255.23 61.9342 253.812 64.1035 252.019 65.9456C250.225 67.7634 248.116 69.2056 245.692 70.272C243.293 71.3143 240.712 71.8354 237.948 71.8354C235.21 71.8354 232.628 71.3143 230.204 70.272C227.805 69.2056 225.696 67.7634 223.878 65.9456C222.085 64.1035 220.667 61.9342 219.625 59.4377C218.582 56.9169 218.061 54.2023 218.061 51.2938C218.061 48.3367 218.582 45.5978 219.625 43.0771C220.667 40.5564 222.085 38.3871 223.878 36.5692C225.696 34.7271 227.805 33.285 230.204 32.2427C232.628 31.2005 235.21 30.6794 237.948 30.6794C240.712 30.6794 243.293 31.1763 245.692 32.17C248.116 33.1396 250.225 34.5332 252.019 36.3511C253.812 38.1447 255.23 40.314 256.272 42.859C257.314 45.3797 257.836 48.1913 257.836 51.2938ZM247.837 51.2938C247.837 49.694 247.571 48.2519 247.038 46.9673C246.529 45.6584 245.826 44.5435 244.929 43.6225C244.032 42.6772 242.978 41.9622 241.766 41.4774C240.578 40.9684 239.306 40.7139 237.948 40.7139C236.591 40.7139 235.306 40.9684 234.095 41.4774C232.907 41.9622 231.865 42.6772 230.968 43.6225C230.095 44.5435 229.405 45.6584 228.896 46.9673C228.387 48.2519 228.132 49.694 228.132 51.2938C228.132 52.7965 228.387 54.1902 228.896 55.4748C229.405 56.7594 230.095 57.8743 230.968 58.8196C231.865 59.7649 232.907 60.5163 234.095 61.0738C235.306 61.607 236.591 61.8736 237.948 61.8736C239.306 61.8736 240.578 61.6191 241.766 61.1101C242.978 60.6011 244.032 59.8861 244.929 58.9651C245.826 58.044 246.529 56.9291 247.038 55.6202C247.571 54.3114 247.837 52.8692 247.837 51.2938ZM228.786 27.5527V19.8814H247.183V27.5527H228.786Z"
+                                fill="black" />
+                            <path d="M48.0621 25.4394L61.7966 42.6957L27.4249 76.2219L7.46414 51.8378L48.0621 25.4394Z"
+                                fill="#D58A9F" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M27.3748 77.1172L6.56698 51.6984L48.1933 24.6313L62.6117 42.7469L27.3748 77.1172ZM60.9814 42.6444L47.9308 26.2474L8.3612 51.9772L27.475 75.3266L60.9814 42.6444Z"
+                                fill="white" />
+                            <path d="M20.2572 60.0954L22.49 38.1539L70.5048 38.1879L67.7454 69.5791L20.2572 60.0954Z"
+                                fill="#950C2A" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M71.1666 37.5825L68.2902 70.3057L19.5991 60.5818L21.9431 37.5477L71.1666 37.5825ZM23.0377 38.7602L20.9162 59.6091L67.2015 68.8525L69.8438 38.7934L23.0377 38.7602Z"
+                                fill="white" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M49.2849 51.7888L21.4139 45.7299L21.6713 44.5458L49.5423 50.6047L49.2849 51.7888Z"
+                                fill="white" />
+                            <path d="M25.263 28.5883L40.0441 12.2197L78.7343 40.6536L57.938 64.3292L25.263 28.5883Z"
+                                fill="#F0932C" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M79.6257 40.5568L57.9469 65.237L24.4442 28.5908L39.9614 11.4071L79.6257 40.5568ZM40.1266 13.0323L26.0815 28.5858L57.9289 63.4214L77.8428 40.7504L40.1266 13.0323Z"
+                                fill="white" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M60.1914 45.7299L42.0147 29.9767L42.8083 29.061L60.9851 44.8142L60.1914 45.7299Z"
+                                fill="white" />
+                            <path d="M14.1432 51.1829L0.813576 33.612L35.9553 0.893861L55.3439 25.7354L14.1432 51.1829Z"
+                                fill="#300729" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M36.0264 0L56.2377 25.8957L13.9934 51.9877L0 33.5419L36.0264 0ZM1.62753 33.6823L14.2934 50.3781L54.4504 25.5753L35.8846 1.78776L1.62753 33.6823Z"
+                                fill="white" />
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M35.9556 23.9178L7.63508 41.6013L6.88675 40.6149L35.3133 22.8902L35.9556 23.9178Z"
+                                fill="white" />
+                            <path
+                                d="M86.4559 9.99999V1.23999H88.6879V9.99999H86.4559ZM80.8879 9.99999V1.23999H83.1199V9.99999H80.8879ZM82.7359 6.55599V4.61199H86.8399V6.55599H82.7359Z"
+                                fill="black" />
+                            <path
+                                d="M93.6662 10.24C93.0822 10.24 92.5622 10.152 92.1062 9.97599C91.6502 9.79999 91.2622 9.55599 90.9422 9.24399C90.6302 8.93199 90.3902 8.57199 90.2222 8.16399C90.0622 7.75599 89.9822 7.31999 89.9822 6.85599V6.56799C89.9822 6.08799 90.0662 5.63999 90.2342 5.22399C90.4102 4.80799 90.6582 4.44399 90.9782 4.13199C91.2982 3.81999 91.6862 3.57599 92.1422 3.39999C92.5982 3.22399 93.1062 3.13599 93.6662 3.13599C94.2342 3.13599 94.7422 3.22399 95.1902 3.39999C95.6462 3.57599 96.0342 3.81999 96.3542 4.13199C96.6742 4.44399 96.9182 4.80799 97.0862 5.22399C97.2622 5.63999 97.3502 6.08799 97.3502 6.56799V6.85599C97.3502 7.31999 97.2662 7.75599 97.0982 8.16399C96.9382 8.57199 96.6982 8.93199 96.3782 9.24399C96.0662 9.55599 95.6822 9.79999 95.2262 9.97599C94.7702 10.152 94.2502 10.24 93.6662 10.24ZM93.6662 8.41599C94.0022 8.41599 94.2782 8.34399 94.4942 8.19999C94.7182 8.05599 94.8862 7.85599 94.9982 7.59999C95.1102 7.33599 95.1662 7.03999 95.1662 6.71199C95.1662 6.36799 95.1062 6.06799 94.9862 5.81199C94.8742 5.54799 94.7062 5.33999 94.4822 5.18799C94.2582 5.03599 93.9862 4.95999 93.6662 4.95999C93.3462 4.95999 93.0742 5.03599 92.8502 5.18799C92.6262 5.33999 92.4542 5.54799 92.3342 5.81199C92.2222 6.06799 92.1662 6.36799 92.1662 6.71199C92.1662 7.03999 92.2222 7.33599 92.3342 7.59999C92.4462 7.85599 92.6142 8.05599 92.8382 8.19999C93.0622 8.34399 93.3382 8.41599 93.6662 8.41599Z"
+                                fill="black" />
+                            <path
+                                d="M101.174 10.216C100.214 10.216 99.4578 10.02 98.9058 9.62799C98.3538 9.22799 98.0578 8.66799 98.0178 7.94799H99.9378C99.9698 8.14799 100.094 8.31999 100.31 8.46399C100.526 8.60799 100.83 8.67999 101.222 8.67999C101.502 8.67999 101.742 8.63999 101.942 8.55999C102.15 8.47199 102.254 8.33199 102.254 8.13999C102.254 7.97199 102.174 7.83599 102.014 7.73199C101.854 7.61999 101.562 7.54399 101.138 7.50399L100.682 7.45599C99.8338 7.36799 99.2098 7.13599 98.8098 6.75999C98.4098 6.38399 98.2098 5.91199 98.2098 5.34399C98.2098 4.85599 98.3298 4.45599 98.5698 4.14399C98.8098 3.82399 99.1418 3.58399 99.5658 3.42399C99.9898 3.26399 100.474 3.18399 101.018 3.18399C101.906 3.18399 102.622 3.37999 103.166 3.77199C103.71 4.15599 103.998 4.71199 104.03 5.43999H102.11C102.078 5.23999 101.97 5.07199 101.786 4.93599C101.602 4.79199 101.338 4.71999 100.994 4.71999C100.746 4.71999 100.542 4.76399 100.382 4.85199C100.23 4.93999 100.154 5.06399 100.154 5.22399C100.154 5.39199 100.226 5.51599 100.37 5.59599C100.522 5.67599 100.762 5.73599 101.09 5.77599L101.546 5.82399C102.394 5.91199 103.046 6.14799 103.502 6.53199C103.966 6.90799 104.198 7.40399 104.198 8.01999C104.198 8.47599 104.074 8.86799 103.826 9.19599C103.586 9.52399 103.238 9.77599 102.782 9.95199C102.334 10.128 101.798 10.216 101.174 10.216Z"
+                                fill="black" />
+                            <path
+                                d="M108.44 10.096C107.72 10.096 107.144 10.008 106.712 9.83199C106.288 9.65599 105.98 9.36399 105.788 8.95599C105.596 8.54799 105.5 7.99599 105.5 7.29999L105.512 1.64799H107.528L107.516 7.35999C107.516 7.65599 107.592 7.88399 107.744 8.04399C107.904 8.19599 108.132 8.27199 108.428 8.27199H109.34V10.096H108.44ZM104.54 4.95999V3.37599H109.34V4.95999H104.54Z"
+                                fill="black" />
+                            <path
+                                d="M113.595 10.24C113.035 10.24 112.539 10.144 112.107 9.95199C111.675 9.75999 111.311 9.49999 111.015 9.17199C110.719 8.84399 110.491 8.47599 110.331 8.06799C110.179 7.65999 110.103 7.23999 110.103 6.80799V6.56799C110.103 6.11999 110.179 5.69199 110.331 5.28399C110.491 4.86799 110.715 4.49999 111.003 4.17999C111.299 3.85999 111.659 3.60799 112.083 3.42399C112.507 3.23199 112.987 3.13599 113.523 3.13599C114.235 3.13599 114.839 3.29599 115.335 3.61599C115.831 3.93599 116.211 4.35999 116.475 4.88799C116.739 5.40799 116.871 5.97599 116.871 6.59199V7.28799H111.015V6.11199H115.611L114.855 6.63999C114.855 6.26399 114.803 5.94799 114.699 5.69199C114.603 5.42799 114.455 5.22799 114.255 5.09199C114.063 4.95599 113.819 4.88799 113.523 4.88799C113.235 4.88799 112.983 4.95599 112.767 5.09199C112.559 5.21999 112.399 5.41999 112.287 5.69199C112.175 5.95599 112.119 6.29199 112.119 6.69999C112.119 7.06799 112.171 7.38799 112.275 7.65999C112.379 7.92399 112.539 8.12799 112.755 8.27199C112.971 8.41599 113.251 8.48799 113.595 8.48799C113.899 8.48799 114.147 8.43599 114.339 8.33199C114.539 8.22799 114.679 8.08799 114.759 7.91199H116.751C116.655 8.35999 116.463 8.75999 116.175 9.11199C115.895 9.46399 115.535 9.73999 115.095 9.93999C114.663 10.14 114.163 10.24 113.595 10.24Z"
+                                fill="black" />
+                            <path
+                                d="M120.746 10.216C120.282 10.216 119.858 10.132 119.474 9.96399C119.098 9.79599 118.77 9.56399 118.49 9.26799C118.218 8.96399 118.006 8.60799 117.854 8.19999C117.71 7.79199 117.638 7.34799 117.638 6.86799V6.57999C117.638 6.09999 117.706 5.65599 117.842 5.24799C117.986 4.83199 118.19 4.47199 118.454 4.16799C118.718 3.85599 119.038 3.61599 119.414 3.44799C119.79 3.27199 120.21 3.18399 120.674 3.18399C121.21 3.18399 121.666 3.30399 122.042 3.54399C122.426 3.77599 122.718 4.11599 122.918 4.56399C123.126 5.01199 123.238 5.55599 123.254 6.19599L122.75 5.82399V1.23999H124.934V9.99999H123.206V7.31199H123.446C123.43 7.90399 123.31 8.41999 123.086 8.85999C122.862 9.29199 122.55 9.62799 122.15 9.86799C121.758 10.1 121.29 10.216 120.746 10.216ZM121.334 8.41599C121.598 8.41599 121.838 8.35599 122.054 8.23599C122.278 8.11599 122.458 7.93999 122.594 7.70799C122.73 7.47599 122.798 7.19599 122.798 6.86799V6.45999C122.798 6.13999 122.726 5.87199 122.582 5.65599C122.446 5.43999 122.266 5.27599 122.042 5.16399C121.826 5.04399 121.59 4.98399 121.334 4.98399C121.046 4.98399 120.786 5.05999 120.554 5.21199C120.33 5.35599 120.15 5.55999 120.014 5.82399C119.886 6.07999 119.822 6.37999 119.822 6.72399C119.822 7.06799 119.886 7.36799 120.014 7.62399C120.15 7.87199 120.33 8.06799 120.554 8.21199C120.786 8.34799 121.046 8.41599 121.334 8.41599Z"
+                                fill="black" />
+                            <path
+                                d="M133.24 10.216C132.696 10.216 132.22 10.104 131.812 9.87999C131.412 9.65599 131.096 9.32799 130.864 8.89599C130.64 8.46399 130.52 7.93599 130.504 7.31199H130.696V9.99999H128.968V1.23999H131.152V5.75199L130.672 6.23199C130.696 5.58399 130.82 5.03199 131.044 4.57599C131.268 4.11999 131.576 3.77599 131.968 3.54399C132.368 3.30399 132.828 3.18399 133.348 3.18399C133.796 3.18399 134.2 3.26799 134.56 3.43599C134.92 3.59599 135.224 3.82799 135.472 4.13199C135.728 4.42799 135.924 4.77999 136.06 5.18799C136.196 5.59599 136.264 6.04399 136.264 6.53199V6.81999C136.264 7.30799 136.196 7.75999 136.06 8.17599C135.924 8.58399 135.724 8.94399 135.46 9.25599C135.196 9.55999 134.876 9.79599 134.5 9.96399C134.132 10.132 133.712 10.216 133.24 10.216ZM132.616 8.41599C132.904 8.41599 133.156 8.34399 133.372 8.19999C133.596 8.04799 133.768 7.83999 133.888 7.57599C134.016 7.31199 134.08 7.01199 134.08 6.67599C134.08 6.33199 134.016 6.03599 133.888 5.78799C133.768 5.53199 133.6 5.33599 133.384 5.19999C133.168 5.05599 132.912 4.98399 132.616 4.98399C132.352 4.98399 132.104 5.04399 131.872 5.16399C131.648 5.28399 131.464 5.45999 131.32 5.69199C131.176 5.92399 131.104 6.20399 131.104 6.53199V6.93999C131.104 7.25199 131.18 7.51999 131.332 7.74399C131.484 7.95999 131.676 8.12799 131.908 8.24799C132.14 8.35999 132.376 8.41599 132.616 8.41599Z"
+                                fill="black" />
+                            <path
+                                d="M137.348 12.64V10.816H138.872C139.056 10.816 139.212 10.792 139.34 10.744C139.468 10.696 139.572 10.616 139.652 10.504C139.732 10.4 139.792 10.252 139.832 10.06L141.32 3.37599H143.384L141.644 10.48C141.516 11.024 141.336 11.452 141.104 11.764C140.88 12.084 140.568 12.308 140.168 12.436C139.776 12.572 139.264 12.64 138.632 12.64H137.348ZM139.448 9.85599V8.17599H140.84V9.85599H139.448ZM138.44 9.85599L136.508 3.37599H138.692L140.504 9.85599H138.44Z"
+                                fill="black" />
+                        </g>
+                        <defs>
+                            <clipPath id="clip0_520_17">
+                                <rect width="258" height="86" fill="white" />
+                            </clipPath>
+                        </defs>
+                    </svg>
+                </a>
             </div>
-            <a class="hosted-by" href="https://tokenflow.live/" target="_blank" rel="noopener noreferrer">
-                <svg width="258" height="46" xmlns="http://www.w3.org/2000/svg" fill="none">
-                    <defs>
-                        <linearGradient y2="0.77281" x2="0.97487" y1="0" x1="0" id="paint0_linear">
-                            <stop stop-color="#B67CFF"></stop>
-                            <stop stop-color="#575EFF" offset="1"></stop>
-                        </linearGradient>
-                    </defs>
-                    <g>
-                        <title>Token Flow Insights SA</title>
-                        <path id="svg_1" fill="black"
-                              d="m80.532,19.859l0,4.712l-6.232,0l0,20.9l-5.89,0l0,-20.9l-6.2701,0l0,-4.712l18.3921,0z"></path>
-                        <path id="svg_2" fill="black"
-                              d="m92.462,45.775c-3.015,0 -5.346,-0.8993 -6.992,-2.698c-1.647,-1.824 -2.47,-4.1547 -2.47,-6.992c0,-2.964 0.861,-5.396 2.584,-7.296c1.722,-1.9253 4.015,-2.888 6.878,-2.888c2.989,0 5.307,0.9247 6.954,2.774c1.646,1.8493 2.47,4.2053 2.47,7.068c0,2.9133 -0.836,5.32 -2.508,7.22c-1.647,1.8747 -3.952,2.812 -6.916,2.812zm-0.038,-15.504c-1.216,0 -2.128,0.5193 -2.736,1.558c-0.608,1.0387 -0.912,2.3813 -0.912,4.028c0,1.6467 0.304,3.002 0.912,4.066c0.633,1.0387 1.57,1.558 2.812,1.558c1.216,0 2.115,-0.5067 2.698,-1.52c0.608,-1.0387 0.912,-2.3813 0.912,-4.028c0,-3.7747 -1.229,-5.662 -3.686,-5.662z"></path>
-                        <path id="svg_3" fill="black"
-                              d="m123.636,45.471l-6.422,0l-6.156,-9.462l0,9.462l-5.548,0l0,-26.22l5.548,0l0,15.58l6.08,-8.626l6.384,0l-6.688,9.234l6.802,10.032z"></path>
-                        <path id="svg_4" fill="black"
-                              d="m137.463,34.071l0,-0.456c-0.178,-2.2547 -1.166,-3.382 -2.964,-3.382c-0.887,0 -1.672,0.3293 -2.356,0.988c-0.684,0.6333 -1.14,1.5833 -1.368,2.85l6.688,0zm3.99,5.662l0,4.636c-1.318,0.8613 -3.332,1.292 -6.042,1.292c-3.167,0 -5.637,-0.912 -7.41,-2.736c-1.748,-1.8493 -2.622,-4.218 -2.622,-7.106c0,-3.0653 0.848,-5.4593 2.546,-7.182c1.722,-1.748 3.838,-2.622 6.346,-2.622c2.584,0 4.623,0.76 6.118,2.28c1.494,1.4947 2.242,3.7367 2.242,6.726c0,0.5827 -0.102,1.5833 -0.304,3.002l-11.324,0c0.38,1.064 1.038,1.8873 1.976,2.47c0.937,0.5827 2.064,0.874 3.382,0.874c1.95,0 3.648,-0.5447 5.092,-1.634z"></path>
-                        <path id="svg_5" fill="black"
-                              d="m152.138,26.205l0,3.268c0.482,-1.064 1.216,-1.9 2.204,-2.508c1.014,-0.6333 2.217,-0.95 3.61,-0.95c1.976,0 3.522,0.5953 4.636,1.786c1.115,1.1653 1.672,2.888 1.672,5.168l0,12.502l-5.548,0l0,-11.476c0,-1.14 -0.266,-2.0013 -0.798,-2.584c-0.532,-0.608 -1.279,-0.912 -2.242,-0.912c-1.013,0 -1.862,0.4053 -2.546,1.216c-0.658,0.7853 -0.988,1.976 -0.988,3.572l0,10.184l-5.548,0l0,-19.266l5.548,0z"></path>
-                        <path id="svg_6" fill="black"
-                              d="m193.941,24.533l-9.728,0l0,6.612l8.474,0l0,4.674l-8.474,0l0,9.652l-5.89,0l0,-25.612l15.618,0l0,4.674z"></path>
-                        <path id="svg_7" fill="black"
-                              d="m197.546,45.471l0,-26.866l5.548,0l0,26.866l-5.548,0z"></path>
-                        <path id="svg_8" fill="black"
-                              d="m216.37,45.775c-3.015,0 -5.345,-0.8993 -6.992,-2.698c-1.647,-1.824 -2.47,-4.1547 -2.47,-6.992c0,-2.964 0.861,-5.396 2.584,-7.296c1.723,-1.9253 4.015,-2.888 6.878,-2.888c2.989,0 5.307,0.9247 6.954,2.774c1.647,1.8493 2.47,4.2053 2.47,7.068c0,2.9133 -0.836,5.32 -2.508,7.22c-1.647,1.8747 -3.952,2.812 -6.916,2.812zm-0.038,-15.504c-1.216,0 -2.128,0.5193 -2.736,1.558c-0.608,1.0387 -0.912,2.3813 -0.912,4.028c0,1.6467 0.304,3.002 0.912,4.066c0.633,1.0387 1.571,1.558 2.812,1.558c1.216,0 2.115,-0.5067 2.698,-1.52c0.608,-1.0387 0.912,-2.3813 0.912,-4.028c0,-3.7747 -1.229,-5.662 -3.686,-5.662z"></path>
-                        <path id="svg_9" fill="black"
-                              d="m233.523,45.471l-6.194,-19.266l5.738,0l1.672,6.346c0.405,1.596 0.747,3.04 1.026,4.332c0.278,1.2667 0.443,2.1407 0.494,2.622l0.114,0.722c0.177,-1.52 0.798,-4.0787 1.862,-7.676l1.862,-6.346l4.788,0l1.824,6.346c0.456,1.6213 0.836,3.078 1.14,4.37c0.304,1.2667 0.494,2.1407 0.57,2.622l0.114,0.684c0.177,-1.4947 0.772,-4.0533 1.786,-7.676l1.786,-6.346l5.472,0l-6.156,19.266l-5.7,0l-1.672,-6.308c-0.355,-1.368 -0.672,-2.6473 -0.95,-3.838c-0.254,-1.1907 -0.418,-2.0393 -0.494,-2.546l-0.114,-0.76c-0.254,1.6973 -0.786,4.0787 -1.596,7.144l-1.672,6.308l-5.7,0z"></path>
-                        <path id="svg_10" fill="url(#paint0_linear)"
-                              d="m44,3.365c0,-0.972 -0.788,-1.76 -1.76,-1.76l-6.4749,0c-2.8007,0 -5.4867,1.1126 -7.4671,3.093l-5.638,5.638l-2.118,-2.118c-1.9804,-1.9804 -4.6664,-3.093 -7.4671,-3.093l-11.3149,0c-0.972,0 -1.76,0.788 -1.76,1.76c0,0.972 0.788,1.76 1.76,1.76l11.3149,0c1.8671,0 3.6578,0.7417 4.9781,2.062l2.118,2.118l-6.958,6.958c-1.3203,1.3203 -3.111,2.062 -4.9781,2.062l-6.4749,0c-0.972,0 -1.76,0.788 -1.76,1.76c0,0.972 0.788,1.76 1.76,1.76l6.4749,0l0.88,0c1.8671,0 3.6578,0.7417 4.9781,2.062l5.858,5.858l-1.458,1.458c-1.3203,1.3203 -3.111,2.062 -4.9781,2.062l-11.7549,0c-0.972,0 -1.76,0.788 -1.76,1.76c0,0.972 0.788,1.76 1.76,1.76l11.7549,0c2.8007,0 5.4867,-1.1126 7.4671,-3.093l1.458,-1.458l6.738,6.738c1.9804,1.9804 4.6664,3.093 7.4671,3.093l5.5949,0c0.972,0 1.76,-0.788 1.76,-1.76c0,-0.972 -0.788,-1.76 -1.76,-1.76l-5.5949,0c-1.8671,0 -3.6578,-0.7417 -4.9781,-2.062l-6.738,-6.738l7.851,-7.851l0.358,0.358c1.9804,1.9804 4.6664,3.093 7.4671,3.093l1.6349,0c0.972,0 1.76,-0.788 1.76,-1.76c0,-0.972 -0.788,-1.76 -1.76,-1.76l-1.6349,0c-1.8671,0 -3.6578,-0.7417 -4.9781,-2.062l-0.358,-0.358l0.798,-0.798c1.3203,-1.3203 3.111,-2.062 4.9781,-2.062l1.1949,0c0.972,0 1.76,-0.788 1.76,-1.76c0,-0.972 -0.788,-1.76 -1.76,-1.76l-1.1949,0c-2.8007,0 -5.4867,1.1126 -7.4671,3.093l-0.798,0.798l-7.631,-7.631l5.638,-5.638c1.3203,-1.3203 3.111,-2.062 4.9781,-2.062l6.4749,0c0.972,0 1.76,-0.788 1.76,-1.76zm-28.298,18.907l6.958,-6.958l7.631,7.631l-7.851,7.851l-5.858,-5.858c-0.6324,-0.6324 -1.3366,-1.1762 -2.0936,-1.6237c0.4277,-0.3143 0.8336,-0.6623 1.2136,-1.0423zm8.3783,-1.2002c-1.031,-1.031 -2.7025,-1.031 -3.7335,0c-1.031,1.0309 -1.031,2.7025 0,3.7335c1.031,1.031 2.7025,1.031 3.7335,0c1.031,-1.031 1.031,-2.7026 0,-3.7335z"
-                              clip-rule="evenodd" fill-rule="evenodd"></path>
-                        <path id="svg_11" fill="black"
-                              d="m69.095,0.495l1.905,0l0,10.11l-1.905,0l0,-4.245l-4.155,0l0,4.245l-1.89,0l0,-10.11l1.89,0l0,4.23l4.155,0l0,-4.23zm7.184,10.23c-1.15,0 -2.05,-0.36 -2.7,-1.08c-0.64,-0.72 -0.96,-1.64 -0.96,-2.76c0,-1.16 0.335,-2.115 1.005,-2.865c0.67,-0.76 1.555,-1.14 2.655,-1.14c1.17,0 2.075,0.37 2.715,1.11c0.64,0.73 0.96,1.66 0.96,2.79c0,1.15 -0.325,2.095 -0.975,2.835c-0.64,0.74 -1.54,1.11 -2.7,1.11zm0,-6.375c-0.57,0 -1.01,0.235 -1.32,0.705c-0.3,0.47 -0.45,1.06 -0.45,1.77c0,0.7 0.155,1.285 0.465,1.755c0.31,0.47 0.75,0.705 1.32,0.705c0.59,0 1.035,-0.23 1.335,-0.69c0.3,-0.46 0.45,-1.045 0.45,-1.755c0,-0.73 -0.145,-1.325 -0.435,-1.785c-0.29,-0.47 -0.745,-0.705 -1.365,-0.705zm9.771,-1.11l0,1.59c-0.5,-0.3 -1.125,-0.45 -1.875,-0.45c-0.31,0 -0.555,0.07 -0.735,0.21c-0.17,0.13 -0.255,0.3 -0.255,0.51c0,0.08 0.01,0.155 0.03,0.225c0.03,0.07 0.075,0.14 0.135,0.21c0.07,0.06 0.135,0.115 0.195,0.165c0.06,0.05 0.145,0.105 0.255,0.165c0.11,0.05 0.205,0.095 0.285,0.135c0.08,0.04 0.19,0.09 0.33,0.15c0.14,0.06 0.25,0.11 0.33,0.15c0.53,0.26 0.95,0.55 1.26,0.87c0.31,0.32 0.465,0.735 0.465,1.245c0,0.71 -0.255,1.265 -0.765,1.665c-0.51,0.4 -1.19,0.6 -2.04,0.6c-0.94,0 -1.7,-0.155 -2.28,-0.465l0,-1.65c0.67,0.45 1.395,0.675 2.175,0.675c0.33,0 0.585,-0.06 0.765,-0.18c0.19,-0.13 0.285,-0.305 0.285,-0.525c0,-0.13 -0.03,-0.245 -0.09,-0.345c-0.06,-0.11 -0.175,-0.215 -0.345,-0.315c-0.17,-0.1 -0.305,-0.17 -0.405,-0.21c-0.09,-0.05 -0.275,-0.135 -0.555,-0.255c-0.03,-0.01 -0.055,-0.02 -0.075,-0.03c-0.01,-0.01 -0.03,-0.02 -0.06,-0.03c-0.03,-0.01 -0.055,-0.02 -0.075,-0.03c-1.11,-0.5 -1.665,-1.22 -1.665,-2.16c0,-0.7 0.265,-1.25 0.795,-1.65c0.53,-0.4 1.195,-0.6 1.995,-0.6c0.77,0 1.41,0.11 1.92,0.33zm4.047,1.11l0,3.87c0,0.32 0.085,0.565 0.255,0.735c0.17,0.16 0.405,0.24 0.705,0.24c0.38,0 0.73,-0.105 1.05,-0.315l0,1.545c-0.35,0.17 -0.8,0.255 -1.35,0.255c-1.64,0 -2.46,-0.83 -2.46,-2.49l0,-3.84l-1.14,0l0,-1.35l1.14,0l0,-1.83l1.8,0l0,1.83l1.89,0l0,1.35l-1.89,0zm8.068,1.83l0,-0.225c-0.02,-0.49 -0.155,-0.88 -0.405,-1.17c-0.24,-0.3 -0.595,-0.45 -1.065,-0.45c-0.43,0 -0.805,0.16 -1.125,0.48c-0.31,0.31 -0.51,0.765 -0.6,1.365l3.195,0zm1.23,2.445l0,1.56c-0.53,0.33 -1.295,0.495 -2.295,0.495c-1.21,0 -2.165,-0.36 -2.865,-1.08c-0.7,-0.72 -1.05,-1.65 -1.05,-2.79c0,-1.21 0.33,-2.16 0.99,-2.85c0.66,-0.69 1.485,-1.035 2.475,-1.035c0.99,0 1.775,0.3 2.355,0.9c0.58,0.6 0.87,1.475 0.87,2.625c0,0.28 -0.035,0.64 -0.105,1.08l-4.77,0c0.13,0.55 0.4,0.97 0.81,1.26c0.42,0.29 0.94,0.435 1.56,0.435c0.8,0 1.475,-0.2 2.025,-0.6zm5.405,0.54c0.54,0 0.99,-0.205 1.35,-0.615c0.36,-0.42 0.54,-1.025 0.54,-1.815c0,-0.77 -0.19,-1.345 -0.57,-1.725c-0.38,-0.39 -0.815,-0.585 -1.305,-0.585c-0.52,0 -0.96,0.215 -1.32,0.645c-0.35,0.42 -0.525,1.01 -0.525,1.77c0,0.69 0.175,1.25 0.525,1.68c0.35,0.43 0.785,0.645 1.305,0.645zm1.89,-9.165l1.8,0l0,10.605l-1.8,0l0,-1.185c-0.52,0.86 -1.29,1.29 -2.31,1.29c-1,0 -1.795,-0.38 -2.385,-1.14c-0.58,-0.76 -0.87,-1.68 -0.87,-2.76c0,-1.2 0.305,-2.15 0.915,-2.85c0.62,-0.71 1.41,-1.065 2.37,-1.065c0.99,0 1.75,0.425 2.28,1.275l0,-4.17zm9.432,9.06l1.62,0c1.21,0 1.815,-0.46 1.815,-1.38c0,-0.94 -0.63,-1.41 -1.89,-1.41l-1.545,0l0,2.79zm0,-7.02l0,2.715l1.14,0c0.68,0 1.19,-0.135 1.53,-0.405c0.34,-0.27 0.51,-0.615 0.51,-1.035c0,-0.39 -0.145,-0.7 -0.435,-0.93c-0.28,-0.23 -0.71,-0.345 -1.29,-0.345l-1.455,0zm-1.89,-1.545l3.585,0c1.08,0 1.92,0.255 2.52,0.765c0.6,0.51 0.9,1.17 0.9,1.98c0,0.55 -0.15,1.03 -0.45,1.44c-0.3,0.4 -0.685,0.665 -1.155,0.795c0.54,0.13 0.985,0.395 1.335,0.795c0.35,0.39 0.525,0.925 0.525,1.605c0,0.8 -0.28,1.455 -0.84,1.965c-0.56,0.51 -1.335,0.765 -2.325,0.765l-4.095,0l0,-10.11zm10.917,9.96l-3,-7.455l1.995,0l0.885,2.43c0.27,0.72 0.485,1.325 0.645,1.815c0.17,0.49 0.275,0.8 0.315,0.93l0.045,0.21c0.1,-0.35 0.42,-1.335 0.96,-2.955l0.795,-2.43l1.89,0l-2.745,7.395c-0.76,2.03 -1.92,3.045 -3.48,3.045c-0.29,0 -0.54,-0.025 -0.75,-0.075l0,-1.485c0.16,0.04 0.33,0.06 0.51,0.06c0.91,0 1.555,-0.495 1.935,-1.485z"></path>
-                    </g>
-                </svg>
-            </a>
         </div>
     </div>
-</div>
 
-{% if events %}
+    {% if events %}
     <div class="events">
         <h3>Emitted events:</h3>
         <table class="table table-striped">
             {% for event in events %}
-                <tr>
-                    <td>
-                        <span style="color: slategray">[{{- event.index -}}]</span>
-                        {{ address_link(event.contract.address, event.contract.name, event.contract.badge) }}
-                        {%- if event.event_guessed -%}
-                            <span style='color: dodgerblue'>.{{ event.event_name }}</span>
-                        {%- else -%}
-                            <span style='color: darkgreen'>.{{ event.event_name }}</span>
-                        {%- endif -%}
-                        ({{ print_event_arguments(event.parameters) }})
-                    </td>
-                </tr>
+            <tr>
+                <td>
+                    <span style="color: slategray">[{{- event.index -}}]</span>
+                    {{ address_link(event.contract.address, event.contract.name, event.contract.badge) }}
+                    {%- if event.event_guessed -%}
+                    <span style='color: dodgerblue'>.{{ event.event_name }}</span>
+                    {%- else -%}
+                    <span style='color: darkgreen'>.{{ event.event_name }}</span>
+                    {%- endif -%}
+                    ({{ print_event_arguments(event.parameters) }})
+                </td>
+            </tr>
             {% endfor %}
         </table>
     </div>
-{% endif %}
+    {% endif %}
 
-{% if balances %}
+    {% if balances %}
     <div class="account-balances">
         <h3>Account balances:</h3>
         <table class="table table-sm">
             <thead>
-            <tr>
-                <th scope="col">Address</th>
-                <th scope="col">Token</th>
-                <th scope="col">Balance</th>
-            </tr>
+                <tr>
+                    <th scope="col">Address</th>
+                    <th scope="col">Token</th>
+                    <th scope="col">Balance</th>
+                </tr>
             </thead>
             <tbody>
-            {% for balance in balances %}
+                {% for balance in balances %}
                 <tr>
                     <td rowspan="{{- balance.tokens|length -}}">
                         {{- address_link(balance.holder.address, balance.holder.name, balance.holder.badge) -}}
                     </td>
                     {% for token in balance.tokens %}
-                        {% if loop.index > 1 %}
-                            <tr>{% endif %}
+                    {% if loop.index > 1 %}
+                <tr>{% endif %}
                     {% if token.token_standard == 'ERC721' %}
-                        <td class="">{{- nft_link(token.token_address, token.token_symbol) -}}</td>
+                    <td class="">{{- nft_link(token.token_address, token.token_symbol) -}}</td>
                     {% else %}
-                        <td class="">{{- address_link(token.token_address, token.token_symbol) -}}</td>
+                    <td class="">{{- address_link(token.token_address, token.token_symbol) -}}</td>
                     {% endif %}
                     <td style="text-align: right">
                         {% if token.balance[0] == '-' %}
-                            <span style="color: darkred">{{- token.balance -}}</span>
+                        <span style="color: darkred">{{- token.balance -}}</span>
                         {% else %}
-                            {{- token.balance -}}
+                        {{- token.balance -}}
                         {% endif %}
                     </td>
-                    {% if loop.index > 1 %}</tr>{% endif %}
-                    {% endfor %}
+                    {% if loop.index > 1 %}
+                </tr>{% endif %}
+                {% endfor %}
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
-{% endif %}
+    {% endif %}
 
-{% if transfers %}
+    {% if transfers %}
     <div class="transfers">
         <h3>Token transfers: </h3>
         <table class="table">
             <thead>
-            <tr>
-                <th scope="col">Sender</th>
-                <th scope="col">Token</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Receiver</th>
-            </tr>
+                <tr>
+                    <th scope="col">Sender</th>
+                    <th scope="col">Token</th>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Receiver</th>
+                </tr>
             </thead>
             <tbody>
-            {% for transfer in transfers %}
+                {% for transfer in transfers %}
                 <tr>
-                    <td>{{- address_link(transfer.from_address.address, transfer.from_address.name, transfer.from_address.badge) -}}</td>
+                    <td>{{- address_link(transfer.from_address.address, transfer.from_address.name,
+                        transfer.from_address.badge) -}}</td>
                     {% if transfer.token_standard == 'ERC721' %}
-                        <td class="">{{- nft_link(transfer.token_address, transfer.token_symbol) -}}</td>
+                    <td class="">{{- nft_link(transfer.token_address, transfer.token_symbol) -}}</td>
                     {% else %}
-                        <td>{{- address_link(transfer.token_address, transfer.token_symbol) -}}</td>
+                    <td>{{- address_link(transfer.token_address, transfer.token_symbol) -}}</td>
                     {% endif %}
                     <td style="text-align: right">
                         {{- transfer.value -}}
                     </td>
-                    <td>{{- address_link(transfer.to_address.address, transfer.to_address.name, transfer.to_address.badge) -}}</td>
+                    <td>{{- address_link(transfer.to_address.address, transfer.to_address.name,
+                        transfer.to_address.badge) -}}</td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
-{% endif %}
+    {% endif %}
 
-{% if call %}
+    {% if call %}
     <div class="calls">
         <h3>Execution trace:</h3>
         <div id="tree">
@@ -359,22 +402,23 @@
             </ul>
         </div>
     </div>
-{% else %}
+    {% else %}
     <h3>Trace decoding error...</h3>
-{% endif %}
+    {% endif %}
 
-</div>
-<script>
-    $(document).ready(() => {
-        $("#tree").fancytree({
-            minExpandLevel: 2,
-            toggleEffect: false,
+    </div>
+    <script>
+        $(document).ready(() => {
+            $("#tree").fancytree({
+                minExpandLevel: 2,
+                toggleEffect: false,
+            });
+            $("#tx_tree").fancytree({
+                minExpandLevel: 2,
+                toggleEffect: false,
+            });
         });
-        $("#tx_tree").fancytree({
-            minExpandLevel: 2,
-            toggleEffect: false,
-        });
-    });
-</script>
+    </script>
 </body>
+
 </html>
